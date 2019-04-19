@@ -1,0 +1,100 @@
+import keyword
+import nltk
+import pandas as pd
+import re
+#Uncomment this to download the nltk when running for the first time
+nltk.download()
+
+
+# Reading the CSV file from the path it was saved
+fp = 'C:\\Users\\kshan\\PycharmProjects\\Practice\\CSV\\merger_trial.csv'
+data = pd.read_csv(fp) # Reading the content of the CSV file
+d = data['Kata_Solution'] # The column containing the kata solutions
+
+# The key_Word variable is a list of python keywords
+Key_Word = keyword.kwlist
+# Creating a combo empty list for the count of keywords in each solution
+# The the empty tot dictionary will house the count of each keyword in the key_word list
+combo = []
+tot = {}
+for s in d:
+    for j in Key_Word:
+        count = sum(1 for match in re.finditer(j, s))
+        tot[j] = count
+    # combo.append(tot.copy())
+    a = (sum(tot.values()))
+    combo.append(a)
+# Creating a column for the Keyword_Count in the CSV file
+data['Keyword_Count'] = combo
+
+
+# creating a list containing the possible operators
+operator = ["+", "-", "*", "/", "=", "==", "&", "|", "%", "**", ":"]
+
+# Creating an empty operatorcount list to house the total count operators in each solution
+operatorcount = []
+for soln in d:
+    count = 0
+    # This loop removes the empty lines and comments
+    for line in soln.split('\n'):
+        if (line.strip() != '') and (len(list(re.finditer(r'"""', line))) ==0):
+            if (len(list(re.finditer(r'#', line))) ==0):
+                for v in operator:
+                    count += line.count(v)
+    operatorcount.append(count)
+data['Operator_Count'] = operatorcount
+
+
+# The code below counts the number of loops in each solution
+loops = ['for', 'while']
+combo_loop = []; tot_loop = {}
+for soln in d:
+    for k in loops:
+        count = sum(1 for match in re.finditer(k, soln))
+        tot_loop[k] = count
+    # combo.append(tot.copy())
+    b = (sum(tot_loop.values()))
+    combo_loop.append(b)
+data['Loop_Count'] = combo_loop
+
+
+# The code below counts the number of conditional statements in each solution
+cond_stat = ['if', 'elif', 'else']
+combo_stat = []; tot_stat = {}
+for soln in d:
+    for i in cond_stat:
+        count = sum(1 for match in re.finditer(i, soln))
+        tot_stat[i] = count
+    # combo.append(tot.copy())
+    c = (sum(tot_stat.values()))
+    combo_stat.append(c)
+data['Cond_Stat_Count'] = combo_stat
+
+
+# The wordcount empty list houses the word count in each solution
+# The charactercount empty list houses the character count in each solution
+wordcount = []
+charactercount = []
+for solution in d:
+    tokens = nltk.word_tokenize(solution)
+    word_count = len(tokens)
+    char_cnt = sum([len(token) for token in tokens])
+    wordcount.append(word_count)
+    charactercount.append(char_cnt)
+# Creating a columns for the wordcount and character count in the CSV file
+data['Word_Count'] = wordcount
+data['Character_Count'] = charactercount
+
+
+# the def function counts the number of lines excluding the empty lines and comments in each solution
+def conv(data):
+    result = []
+    for d in data.split('\n'):
+        if (d.strip() != '') and (len(list(re.finditer(r'"""', d))) ==0):
+            if (len(list(re.finditer(r'#', d))) ==0):
+                result.append(d)
+    return len(result)
+# Creating a column for the number of lines in each solution
+data['No_lines'] = data['Kata_Solution'].apply(conv)
+
+data.to_csv('C:\\Users\\kshan\\PycharmProjects\\Practice\\CSV\\final_trial.csv')
