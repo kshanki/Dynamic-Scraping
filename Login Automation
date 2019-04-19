@@ -1,0 +1,72 @@
+from selenium import webdriver
+from bs4 import BeautifulSoup
+import requests
+from selenium.webdriver.common.keys import Keys
+import pandas as pd
+import time
+import re
+
+# Assigning the selenium web driver to a parameter. The executable path is the path to the web browser driver
+driver = webdriver.Chrome(executable_path='C://Users//kshan//AppData//Local//Programs//Python//Python36-32//chromedriver')
+
+# This fetches the log in page of the codewars website
+driver.get("https://www.codewars.com/dashboard")
+
+# It finds the elements handling the username and the password
+username = driver.find_element_by_id("user_email")
+password = driver.find_element_by_id("user_password")
+
+# This automatically fills in the username and the password
+username.send_keys("mr07157@georgiasouthern.edu")
+password.send_keys("Olasunkanm1")
+
+# This will automatically log the user in by clicking the submit button
+form = driver.find_element_by_id("new_user")
+form.submit()
+
+driver.get("https://www.codewars.com/kata/sequencesum/python")
+time.sleep(3)
+res = driver.execute_script("return document.documentElement.outerHTML")
+driver.quit()
+soup = BeautifulSoup(res, 'lxml')
+
+# find the div with the class housing the kata question
+div_finder_1 = soup.find_all('div', {'class':['markdown']})
+for x in div_finder_1:
+    Kata = x.text
+# find the div with the class housing the kata level
+div_finder_2 = soup.find('div', {'class':['small-hex is-extra-wide is-white-rank']})
+Kata_level = div_finder_2.text
+
+# find the div with the class housing the kata bookmark
+div_finder_3 = soup.find('a', {'class':['star js-add-code-challenge-star has-tip']})
+Kata_bookmark = div_finder_3.span.text
+
+# find the div with the class housing the kata collection
+div_finder_4 = soup.find('a', {'class': ['has-tip js-add-to-collection']})
+Kata_Collection = div_finder_4.span.text
+
+# find the div with the class housing the kata python completion
+div_finder_5 = soup.find('span', {'class':['has-tip'], 'title':['Total times Python has been completed out of all kata completions']})
+# div_finder_5 = soup.find('span', {'class': ['has-tip'], 'data-selector': ['tooltip8t2a4e']})
+
+Kata_python_completion = div_finder_5.text[0:5]
+Total_Kata_Completion = div_finder_5.text[8:]
+
+# find the div with the class housing the kata Satisfactory rating
+div_finder_7 = soup.find('span', {'class': ['mrn']})
+Kata_Sat_ratings = div_finder_7.text[0:3]
+Kata_Total_Votes = div_finder_7.text[6:]
+
+# find the div with the class housing the kata tags
+div_finder_9 = soup.find('div', {'class':['mtm']})
+value = div_finder_9.text
+Kata_Tags = ', '.join(re.findall('[A-Z][^A-Z]*', value))
+
+# creating a list containing the Kata attributes
+values = [Kata, Kata_level, Kata_bookmark, Kata_Collection, Kata_python_completion, Total_Kata_Completion, Kata_Sat_ratings,
+          Kata_Total_Votes, Kata_Tags]
+
+# creating a CSV data frame to dump the kata attributes
+df = pd.DataFrame([values], columns=['Kata', 'Kata_level', 'Kata_bookmark', 'Kata_Collection', 'Kata_python_completion', 'Total_Kata_Completion', 'Kata_Satisfactory_ratings', 'Kata_Total_Votes', 'Kata_Tags'])
+df.to_csv('C:/Users/kshan/PycharmProjects/Practice/CSV/majeed_trial.csv', mode='a', header=False)
